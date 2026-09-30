@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Controle de Valores</title>
+<meta name="theme-color" content="#05060a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--or:#ff8a00;--ye:#ffe600;--pk:#ff2bd6;--gr:#39ff14;--br:#c4773b;--bl:#00d4ff}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;color:#eee;padding-bottom:110px;min-height:100vh;
+background:radial-gradient(circle at 0 0,#ff2bd61f,transparent 40%),radial-gradient(circle at 100% 30%,#00d4ff1f,transparent 40%),radial-gradient(circle at 0 100%,#ff8a001a,transparent 40%),#05060a}
+header{display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border-bottom:1px solid #222}
+header img{width:42px;height:42px;border-radius:10px;box-shadow:0 0 12px var(--bl)}
+header b{font-size:20px;letter-spacing:1px;background:linear-gradient(90deg,var(--or),var(--ye),var(--gr),var(--bl),var(--pk));-webkit-background-clip:text;background-clip:text;color:transparent}
+.tabs{display:flex;gap:8px;padding:10px 14px 0}
+.tabs button{flex:1;padding:13px;border:1px solid #333;border-radius:10px;background:#0b0d16;font-size:16px;font-weight:700;color:#888}
+.tabs button[data-t=t1].on{color:var(--or);border-color:var(--or);box-shadow:0 0 14px #ff8a0088;text-shadow:0 0 8px var(--or)}
+.tabs button[data-t=t2].on{color:var(--gr);border-color:var(--gr);box-shadow:0 0 14px #39ff1488;text-shadow:0 0 8px var(--gr)}
+.tab{display:none;padding:14px}.tab.on{display:block}
+.card{--c:var(--bl);background:#0b0d16cc;border:1px solid var(--c);border-radius:14px;padding:14px;margin-bottom:16px;box-shadow:0 0 16px color-mix(in srgb,var(--c) 45%,transparent)}
+h3{margin:0 0 8px;color:var(--c);text-shadow:0 0 8px var(--c)}
+input{width:100%;padding:12px;margin:4px 0;background:#05060a;color:#fff;border:1px solid #333;border-radius:8px;font-size:16px;color-scheme:dark}
+select{width:100%;padding:12px;margin:4px 0;background:#05060a;color:#fff;border:1px solid #333;border-radius:8px;font-size:16px;color-scheme:dark}
+input:focus,select:focus{outline:0;border-color:var(--c);box-shadow:0 0 8px var(--c)}
+.row{display:flex;gap:8px}.row input:first-child{flex:0 0 40%}
+.b{width:100%;padding:13px;margin-top:8px;border:0;border-radius:10px;background:var(--c);color:#000;font-size:16px;font-weight:800;box-shadow:0 0 12px var(--c)}
+.item{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #222;font-size:15px}
+.item b{color:var(--ye)}.item i{color:var(--bl);font-style:normal}.item small{color:var(--br)}
+.item button{border:1px solid var(--pk);background:none;color:var(--pk);border-radius:6px;padding:4px 10px;margin-left:8px}
+.res{display:none;margin-top:10px;padding:12px;border:1px solid var(--gr);border-radius:10px;color:var(--gr);background:#0a1a0a;font-weight:700;font-size:17px;text-shadow:0 0 6px var(--gr)}
+.neg{border-color:var(--pk);color:var(--pk);background:#1a0a16;text-shadow:0 0 6px var(--pk)}
+.fix{position:fixed;bottom:0;left:0;right:0;background:#05060af2;padding:10px;border-top:1px solid var(--pk);box-shadow:0 0 14px #ff2bd655}
+#toast{display:none;position:fixed;bottom:105px;left:50%;transform:translateX(-50%);background:#0b0d16;color:var(--ye);border:1px solid var(--ye);box-shadow:0 0 12px var(--ye);padding:10px 16px;border-radius:10px;z-index:9}
+.fix{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}.fix .b{width:auto;margin:0;padding:9px 14px;font-size:14px}
+</style>
+</head>
+<body>
+<header><img src="icon-192.png" alt=""><b>CONTROLE DE VALORES</b></header>
+<div class="tabs">
+  <button class="on" data-t="t1">Despesas</button>
+  <button data-t="t2">Vendas</button>
+</div>
+
+<div id="t1" class="tab on">
+  <div class="card" style="--c:var(--or)">
+    <h3>Nova despesa</h3>
+    <div class="row">
+      <input id="d_val" type="number" inputmode="decimal" step="0.01" placeholder="Valor (R$)">
+      <select id="d_nome">
+        <option value="">Selecione o tipo</option>
+        <option value="Fornecedor">Fornecedor</option>
+        <option value="Despesa">Despesa</option>
+      </select>
+    </div>
+    <input id="d_data" type="date">
+    <button class="b" onclick="add('desp','d')">Adicionar</button>
+  </div>
+  <div class="card" style="--c:var(--ye)">
+    <h3>Lista</h3>
+    <div id="l_desp"></div>
+    <button class="b" onclick="calc()">Somar</button>
+    <div id="r_desp" class="res"></div>
+  </div>
+</div>
+
+<div id="t2" class="tab">
+  <div class="card" style="--c:var(--gr)">
+    <h3>Vendas</h3>
+    <input id="c_nome" placeholder="Nome do comprador">
+    <input id="c_val" type="number" inputmode="decimal" step="0.01" placeholder="Valor (R$)">
+    <input id="c_data" type="date">
+    <button class="b" onclick="add('comp','c')">Adicionar venda</button>
+    <div id="l_comp"></div>
+  </div>
+  <div class="card" style="--c:var(--bl)">
+    <button class="b" onclick="calc()">Calcular resultado</button>
+    <div id="r_cv" class="res"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div class="fix">
+  <button class="b" style="--c:var(--gr)" onclick="zap()">Enviar no WhatsApp</button>
+  <button class="b" style="--c:var(--bl)" onclick="exportar()">Exportar</button>
+  <button class="b" style="--c:var(--ye)" onclick="$('arq').click()">Importar</button>
+  <input id="arq" type="file" accept=".json,application/json" style="display:none" onchange="importar(this)">
+  <button id="bl" class="b" style="--c:var(--br)" onclick="limpar()">Limpar</button>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const brl=n=>n.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const dt=s=>s?s.split('-').reverse().join('/'):'sem data';
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S={desp:[],comp:[]};
+try{S=Object.assign(S,JSON.parse(localStorage.getItem('cv2')||'{}'))}catch(e){}
+const save=()=>{try{localStorage.setItem('cv2',JSON.stringify(S))}catch(e){}};
+const sum=a=>a.reduce((t,x)=>t+x.val,0);
+
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button,.tab').forEach(e=>e.classList.remove('on'));
+  b.classList.add('on');$(b.dataset.t).classList.add('on');
+});
+
+function add(k,p){
+  const val=parseFloat($(p+'_val').value);
+  if(isNaN(val)){toast('Digite um valor');return}
+  const nome=$(p+'_nome')?$(p+'_nome').value.trim():'';
+  if($(p+'_nome')&&!nome){toast(p==='d'?'Selecione Fornecedor ou Despesa':'Digite o nome do comprador');return}
+  S[k].push({nome,val,data:$(p+'_data').value});
+  $(p+'_val').value='';if($(p+'_nome'))$(p+'_nome').value='';
+  save();draw();
+}
+function del(k,i){S[k].splice(i,1);save();draw()}
+function draw(){
+  for(const k of ['desp','comp']){
+    $('l_'+k).innerHTML=S[k].map((x,i)=>`<div class="item"><span>${x.nome?`<i>${esc(x.nome)}</i> — `:''}<b>${brl(x.val)}</b> <small>${dt(x.data)}</small></span><button onclick="del('${k}',${i})">X</button></div>`).join('');
+  }
+}
+function calc(){
+  const r=$('r_desp');r.style.display='block';r.textContent='Total de despesas: '+brl(sum(S.desp));
+  const d=sum(S.comp)-sum(S.desp),c=$('r_cv');c.style.display='block';
+  c.className='res'+(d<0?' neg':'');
+  c.innerHTML=`Vendas: ${brl(sum(S.comp))}<br>Despesas: ${brl(sum(S.desp))}<br>Resultado: ${brl(d)}`;
+}
+function zap(){
+  const L=x=>x.map(i=>`• ${i.nome?i.nome+' - ':''}${brl(i.val)} (${dt(i.data)})`).join('\n')||'(nenhum)';
+  const d=sum(S.comp)-sum(S.desp);
+  const m=`*DESPESAS*\n${L(S.desp)}\nTotal: ${brl(sum(S.desp))}\n\n*VENDAS*\n${L(S.comp)}\nTotal: ${brl(sum(S.comp))}\n\n*RESULTADO (vendas - despesas)*\n${brl(d)}`;
+  window.open('https://wa.me/?text='+encodeURIComponent(m),'_blank');
+}
+function exportar(){
+  try{
+    const b=new Blob([JSON.stringify({desp:S.desp,comp:S.comp},null,1)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);
+    a.download='controle-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);a.click();a.remove();toast('Backup exportado');
+  }catch(e){toast('Erro ao exportar')}
+}
+function importar(inp){
+  const f=inp.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{try{
+    const d=JSON.parse(r.result);
+    if(!Array.isArray(d.desp)||!Array.isArray(d.comp))throw 0;
+    S={desp:d.desp,comp:d.comp};save();draw();toast('Dados importados');
+  }catch(e){toast('Arquivo inválido')}inp.value=''};
+  r.readAsText(f);
+}
+let armed=false;
+function limpar(){
+  const b=$('bl');
+  if(!armed){armed=true;b.textContent='Toque de novo para apagar';setTimeout(()=>{armed=false;b.textContent='Limpar'},3000);return}
+  armed=false;b.textContent='Limpar';
+  S={desp:[],comp:[]};save();draw();$('r_desp').style.display=$('r_cv').style.display='none';toast('Dados apagados');
+}
+function toast(t){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(window._t);window._t=setTimeout(()=>e.style.display='none',2500)}
+draw();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
